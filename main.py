@@ -1,6 +1,7 @@
 from planet import  Planet,Direction
 from erkunder import Erkunder
 planet = Planet()
+#test
 erkunder = Erkunder(planet)
 erkunder.add_start_scann((0,0),[Direction.WEST,Direction.NORTH,Direction.EAST,Direction.SOUTH])
 print(erkunder.get_next_direction())
