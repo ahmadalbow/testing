@@ -12,7 +12,7 @@ class Erkunder():
         self._double_visited_direction = None
         self._double_visited = False
         self.is_Parent = False
-
+        self.cur_direction = None
 
     def add_start_scann(self,point : Tuple[int,int], directions : List[Direction] ):
         self.points[point] = {}
@@ -23,6 +23,12 @@ class Erkunder():
 
 
     def add_new_scann(self,point : Tuple[int,int], directions : List[Direction], in_diriction ):
+        if (self.cur_point == point):
+            self.is_Parent = True
+            self.points[self.cur_point][in_diriction] = True
+            self.planet.add_path((self.cur_point, self.cur_direction), (point, in_diriction),1)
+        if (not self.is_Parent):
+            self.planet.add_path((self.cur_point, self.cur_direction), (point, in_diriction),1)
         if (self.visited.__contains__(point)) :
             self._double_visited_direction = in_diriction
             self._double_visited = True
@@ -45,18 +51,19 @@ class Erkunder():
         return True
 
 
-
-    def get_new_direction(self):
+    def get_next_direction(self):
         if ( self._double_visited and not self.is_Parent) :
             self.is_Parent = True
             self.points[self.cur_point][self._double_visited_direction] = True
-            return self._double_visited_direction
+            if (self._are_all_points_visited()): return None
+            return (self.cur_point,self._double_visited_direction)
         self.is_Parent = False
         for dir in self.points[self.cur_point]:
             if (not self.points[self.cur_point][dir]):
                 self.points[self.cur_point][dir] = True
-                return dir
+                self.cur_direction = dir
+                return (self.cur_point,dir)
         if (not self._are_all_points_visited()):
             self.is_Parent = True
-            return  self.visited[self.cur_point]
+            return  (self.cur_point,self.visited[self.cur_point])
         return None
