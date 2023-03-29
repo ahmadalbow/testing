@@ -33,10 +33,10 @@ class Planet:
     def __init__(self):
         """ Initializes the data structure """
         self.paths = {}
-        self.points = {}
 
     def add_path(self, start: Tuple[Tuple[int, int], Direction], target: Tuple[Tuple[int, int], Direction],
                  weight: int):
+
         # if the start or the target is not a point then the path will not be added
         if (start[0] == (None,None) or target[0] == (None,None)) : return
 
@@ -64,7 +64,27 @@ class Planet:
         for x in outgoings:
             neigbours.append((outgoings[x][0], x, outgoings[x][2]))
         return neigbours
+    # get the direction from the target point to the start point
+    def get_in_direction(self, start :Tuple[int,int], target: Tuple[int,int]):
+        start_directions = self.get_paths()[start]
+        for dir in start_directions:
+            if (start_directions[dir][0] == target):
+                return start_directions[dir][1]
+        return None
 
+    # get the direction from the start point to the target point
+    def get_out_direction(self, start: Tuple[int,int], target: Tuple[int,int]):
+        start_directions = self.paths[start]
+        for dir in start_directions:
+            if (start_directions[dir][0] == target):
+                return dir
+        return None
+    def block_path(self,start:Tuple[int, int],end : Tuple[int, int]):
+        self.paths[start][self.get_out_direction(start,end)][2] = -1
+        self.paths[end][self.get_in_direction(start, end)][2] = -1
+    def un_block_path(self,start:Tuple[int, int],end : Tuple[int, int],weight : Weight):
+        self.paths[start][self.get_out_direction(start, end)][2] = weight
+        self.paths[end][self.get_in_direction(start, end)][2] = weight
     def shortest_path(self, start: Tuple[int, int], target: Tuple[int, int]) -> Optional[List[Tuple[Tuple[int, int], Direction]]]:
 
         # Dijkstra algorithm to find the shortest path
@@ -102,6 +122,3 @@ class Planet:
             curr_v = prev_v[curr_v][0]
         if (start != target) & (path == []): return None
         return path
-
-
-

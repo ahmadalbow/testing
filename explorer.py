@@ -8,6 +8,13 @@ class Point():
         self.directions = {}
         self.original_perant = None
         self.last_parent = None
+        self.cur_direction = None
+        self.is_new_scanned = True
+    def __eq__(self, other):
+        if not isinstance(other, Point):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
+        return self.coordinates == other.coordinates
 
     def add_directions(self, directions):
         for dir in directions:
@@ -17,81 +24,82 @@ class Explorer():
     def __init__(self, planet):
         self.planet = planet
         self.points = []
-        self.cur_point = None
-        self.prev_point = None
-        self.visited = {}
-        self._double_visited_direction = None
-        self._double_visited = False
-        self.back_to_parent = False
-        self.cur_direction = None
+        self.cur_point = Point(None)
+        self.prev_point = Point(None)
+
 
     # check if the coordinate is alreadey visited
-    def is_visited(self, coordinates: Tuple[int, int]):
-        for point in self.points:
-            if (point.coordinates == coordinates):
-                return True
-        return False
-
+    def is_visited(self, point ):
+        return self.planet.paths.__contains__(point)
     # check if all the outgoings path of a point is drived, so then is point explored
     def is_explored(self, point: Point):
         for dir in point.directions:
             if not point.directions[dir]:
                 return False
         return True
-
-
+    def is_parent(self, point):
+        if (self.prev_point.coordinates == None) :
+            return False
+        if(self.cur_point == self.prev_point): return True
+        return (self.prev_point.last_parent.coordinates == self.cur_point.coordinates) or \
+            (self.prev_point.original_perant.coordinates == self.cur_point.coordinates)
     def add_start_scann(self, coordinates: Tuple[int, int], directions: List[Direction]):
         point = Point(coordinates)
         point.add_directions(directions)
         self.cur_point = point
         self.points.append(point)
-
+    def add_path_to_planet(self):
+        self.planet.add_path((self.prev_point.coordinates, self.prev_point.cur_direction), \
+                                 (self.cur_point.coordinates, self.cur_point.cur_direction),1)
     def add_new_scann(self, coordinates: Tuple[int, int], directions: List[Direction], in_diriction):
+
+        weight = 1
         point = Point(coordinates)
         point.last_parent = self.cur_point
         self.prev_point = self.cur_point
         self.cur_point = point
-        if (self.cur_point == point.last_parent):
-            self.back_to_parent = True
-            self.points[self.cur_point][in_diriction] = True
-            self.planet.add_path((self.cur_point, self.cur_direction), (coordinates, in_diriction), 1)
-        if (not self.back_to_parent):
-            self.planet.add_path((self.cur_point, self.cur_direction), (coordinates, in_diriction), 1)
-        if (self.is_visited(point)):
-            self._double_visited_direction = in_diriction
-            self._double_visited = True
-            self.cur_point = coordinates
+        for p in self.points:
+            if p == point :
+                self.cur_point = p
+        if(not self.is_parent(self.cur_point) and self.is_visited(self.cur_point.coordinates)):
+            self.add_path_to_planet()
+            self.cur_point.is_new_scanned = False
+        if (self.is_visited(point.coordinates)):
             return
 
-        self._double_visited = False
-        self.points[(coordinates, in_diriction)] = {}
-        self.visited[coordinates] = in_diriction
+        self.cur_point.original_perant = point.last_parent
+        self.cur_point.add_directions(directions)
+        self.points.append(point)
+        self.add_path_to_planet()
 
-        self.points[coordinates] = {}
-        for dir in directions:
-            if (dir != in_diriction):
-                self.points[coordinates].update({dir: (False)})
 
     def _are_all_points_visited(self):
         for point in self.points:
-            for dir in self.points[point]:
-                if not self.points[point][dir]:
-                    return False
+            if (not self.is_explored(point)) :
+                return False
         return True
 
     def get_next_direction(self):
-        if (self._double_visited and not self.back_to_parent):
-            self.back_to_parent = True
-            self.points[self.cur_point][self._double_visited_direction] = True
-            if (self._are_all_points_visited()): return None
-            return (self.cur_point, self._double_visited_direction)
-        self.back_to_parent = False
-        for dir in self.points[self.cur_point]:
-            if (not self.points[self.cur_point][dir]):
-                self.points[self.cur_point][dir] = True
-                self.cur_direction = dir
-                return (self.cur_point, dir)
+        cur_point_index = self.points.index(self.cur_point)
+
+        direction = None
+        if (self.is_visited(self.cur_point.coordinates) and not self.is_parent(self.cur_point)):
+            self.points[cur_point_index].directions[self.cur_point.cur_direction] = True
+            if (self._are_all_points_visited()):
+                return None
+            direction =  (self.cur_point.coordinates,
+            self.planet.get_out_direction(self.cur_point.coordinates, self.prev_point.coordinates))
+            self.points[cur_point_index].cur_direction = direction[1]
+            return direction
+        for dir in self.cur_point.directions:
+            if (not self.cur_point.directions[dir]):
+                self.points[cur_point_index].directions[dir] = True
+                direction = (self.cur_point.coordinates, dir)
+                self.points[cur_point_index].cur_direction = direction[1]
+                return direction
         if (not self._are_all_points_visited()):
-            self.back_to_parent = True
-            return (self.cur_point, self.visited[self.cur_point])
+            direction = (self.cur_point.coordinates, self.planet.get_out_direction(self.cur_point.coordinates,
+                                                                              self.cur_point.original_perant.coordinates))
+            self.points[cur_point_index].cur_direction = direction[1]
+            return direction
         return None
