@@ -18,13 +18,10 @@ explorer.add_new_scann((1, 2), [Direction.EAST, Direction.NORTH, Direction.WEST,
 print(explorer.get_next_direction())
 explorer.add_new_scann((1, 1), [Direction.WEST, Direction.SOUTH, Direction.NORTH], Direction.SOUTH)
 print(explorer.get_next_direction())
-explorer.add_new_scann((1, 2), [Direction.WEST, Direction.NORTH], Direction.WEST)
+explorer.add_new_scann((1, 2), [Direction.WEST, Direction.NORTH], Direction.NORTH)
 print(explorer.get_next_direction())
 explorer.add_new_scann((0, 1), [Direction.EAST, Direction.SOUTH, Direction.NORTH], Direction.SOUTH)
 print(explorer.get_next_direction())
 explorer.add_new_scann((0, 0), [Direction.EAST, Direction.SOUTH], Direction.SOUTH)
 print(explorer.get_next_direction())
 
-for keys,values in planet.get_paths().items():
-    print(keys)
-    print(values)
