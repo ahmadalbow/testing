@@ -53,16 +53,15 @@ class Explorer():
         point.add_directions(directions)
         self.cur_point = point
         self.points.append(point)
-    def add_path_to_planet(self):
+    def add_path_to_planet(self,weight):
         self.planet.add_path((self.prev_point.coordinates, self.prev_point.cur_direction), \
-                                 (self.cur_point.coordinates, self.cur_point.cur_direction),1)
+                                 (self.cur_point.coordinates, self.cur_point.cur_direction),weight)
     def get_point(self,coordinates):
         for p in self.points:
             if p.coordinates == coordinates:
                 return p
         return None
-    def add_new_scann(self, coordinates: Tuple[int, int], directions: List[Direction], in_diriction):
-        weight = 1
+    def add_new_scann(self, coordinates: Tuple[int, int], directions: List[Direction], in_diriction,weight):
 
         self.prev_point = copy.deepcopy(self.cur_point)
         if (self.cur_point.coordinates == coordinates):
@@ -70,7 +69,10 @@ class Explorer():
             self.points[cur_point_index].directions[in_diriction] = True
             self.cur_point.cur_direction = in_diriction
             self.points[cur_point_index].last_parent = self.prev_point
-            self.add_path_to_planet()
+            if(self.prev_point.cur_direction == self.cur_point.cur_direction):
+                self.add_path_to_planet(-1)
+                return
+            self.add_path_to_planet(weight)
             return
         if ( self.is_visited(coordinates)):
             cur_point_index = self.points.index(self.get_point(coordinates))
@@ -80,7 +82,7 @@ class Explorer():
             self.cur_point.cur_direction = in_diriction
             self.points[cur_point_index].directions[in_diriction] = True
             if (not self.is_parent(self.cur_point)):
-                self.add_path_to_planet()
+                self.add_path_to_planet(weight)
             else:
                 self.cur_point = self.get_point(coordinates)
         else :
@@ -92,7 +94,7 @@ class Explorer():
             point.cur_direction = in_diriction
             self.cur_point = point
             self.points.append(point)
-            self.add_path_to_planet()
+            self.add_path_to_planet(weight)
     def _are_all_points_visited(self):
         for point in self.points:
             if (not self.is_explored(point)) :
@@ -103,22 +105,27 @@ class Explorer():
         direction = None
         cur_point_index = self.points.index(self.cur_point)
         if (not self.cur_point.just_scanned and not self.is_parent(self.cur_point)):
-            self.points[cur_point_index].directions[self.cur_point.cur_direction] = True
             if (self._are_all_points_visited()):
                 return None
             direction =  (self.cur_point.coordinates,
             self.planet.get_out_direction(self.cur_point.coordinates, self.prev_point.coordinates))
-            self.points[cur_point_index].cur_direction = direction[1]
             return direction
         for dir in self.cur_point.directions:
             if (not self.cur_point.directions[dir]):
-                self.points[cur_point_index].directions[dir] = True
                 direction = (self.cur_point.coordinates, dir)
-                self.points[cur_point_index].cur_direction = direction[1]
                 return direction
         if (not self._are_all_points_visited()):
-            direction = (self.cur_point.coordinates, self.planet.get_out_direction(self.cur_point.coordinates,
-                                                                              self.cur_point.original_perant.coordinates))
-            self.points[cur_point_index].cur_direction = direction[1]
+            un_exp_p = {}
+            for p in self.points:
+                if (not self.is_explored(p)):
+                    path_len = self.planet.path_length(self.planet.shortest_path(self.cur_point.coordinates,p.coordinates))
+                    un_exp_p[p.coordinates] = path_len
+            p = min(un_exp_p, key=lambda a: un_exp_p[a])
+            direction = self.planet.shortest_path(self.cur_point.coordinates,p)[0]
             return direction
         return None
+    def set_choosed_direction(self,direction):
+        direction = None
+        cur_point_index = self.points.index(self.cur_point)
+        self.points[cur_point_index].cur_direction = direction
+        self.points[cur_point_index].directions[direction] = True

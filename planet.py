@@ -85,6 +85,13 @@ class Planet:
     def un_block_path(self,start:Tuple[int, int],end : Tuple[int, int],weight : Weight):
         self.paths[start][self.get_out_direction(start, end)][2] = weight
         self.paths[end][self.get_in_direction(start, end)][2] = weight
+    def path_length(self,paths):
+        lenght = 0
+        if paths == None:
+            return  float("inf")
+        for path in paths :
+            lenght += self.paths[path[0]][path[1]][2]
+        return lenght
     def shortest_path(self, start: Tuple[int, int], target: Tuple[int, int]) -> Optional[List[Tuple[Tuple[int, int], Direction]]]:
 
         # Dijkstra algorithm to find the shortest path
