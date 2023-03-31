@@ -34,7 +34,7 @@ class Explorer():
 
     # check if the coordinate is alreadey visited
     def is_visited(self, point ):
-        return self.planet.paths.__contains__(point)
+        return self.points.__contains__(Point(point))
     # check if all the outgoings path of a point is drived, so then is point explored
     def is_explored(self, point: Point):
         for dir in point.directions:
@@ -49,7 +49,7 @@ class Explorer():
         if (self.prev_point.original_perant == None):
             return False
         return (self.prev_point.original_perant.coordinates == self.cur_point.coordinates)
-    def add_start_scann(self, coordinates: Tuple[int, int], directions: List[Direction]):
+    def add_start_scan(self, coordinates: Tuple[int, int], directions: List[Direction]):
         point = Point(coordinates)
         point.add_directions(directions)
         self.cur_point = point
@@ -71,11 +71,12 @@ class Explorer():
 
 
 
-    def add_new_scann(self, coordinates: Tuple[int, int], directions: List[Direction], in_diriction,weight):
+    def add_new_scan(self, coordinates: Tuple[int, int], directions: List[Direction], in_diriction,weight):
         if (not directions.__contains__(in_diriction)):
             directions.append(in_diriction)
         self.prev_point = copy.deepcopy(self.cur_point)
         if (self.cur_point.coordinates == coordinates):
+
             cur_point_index = self.points.index(self.get_point(coordinates))
             self.points[cur_point_index].directions[in_diriction] = True
             self.cur_point.cur_direction = in_diriction
@@ -86,6 +87,11 @@ class Explorer():
             self.add_path_to_planet(weight)
             return
         if ( self.is_visited(coordinates)):
+            dirs = self.get_point(coordinates).directions.copy()
+            if (directions != None):
+                for dir in dirs:
+                    if (not directions.__contains__(dir)):
+                        del self.get_point(coordinates).directions[dir]
             cur_point_index = self.points.index(self.get_point(coordinates))
             self.points[cur_point_index].last_parent = self.prev_point
             self.points[cur_point_index].just_scanned = False
@@ -106,11 +112,33 @@ class Explorer():
             self.cur_point = point
             self.points.append(point)
             self.add_path_to_planet(weight)
+
     def _are_all_points_visited(self):
         for point in self.points:
             if (not self.is_explored(point)) :
                 return False
         return True
+    def add_path(self,start,end):
+        start_point = start[0]
+        start_direction = start[1]
+        end_point = start[0]
+        end_direction = start[1]
+        if (self.points.__contains__(Point(start_point))):
+            self.get_point(start_point).directions[start_direction] = True
+        else :
+            point = Point(start_point)
+            point.directions = {Direction.NORTH:False,Direction.WEST:False,Direction.SOUTH:False,Direction.EAST:False}
+            point.directions[start_point] = True
+            self.points.append(point)
+        if (self.points.__contains__(Point(end_point))):
+            self.get_point(end_point).directions[end_direction] = True
+        else :
+            point = Point(end_point)
+            point.directions = {Direction.NORTH:False,Direction.WEST:False,Direction.SOUTH:False,Direction.EAST:False}
+            point.directions[end_direction] = True
+            self.points.append(point)
+
+
 
     def get_next_direction(self):
         direction = None
@@ -132,6 +160,8 @@ class Explorer():
                     path_len = self.planet.path_length(self.planet.shortest_path(self.cur_point.coordinates,p.coordinates))
                     un_exp_p[p.coordinates] = path_len
             p = min(un_exp_p, key=lambda a: un_exp_p[a])
+            if(self.planet.shortest_path(self.cur_point.coordinates,p) == None ) :
+                return  None
             direction = self.planet.shortest_path(self.cur_point.coordinates,p)[0]
             return direction
         return None
