@@ -25,6 +25,7 @@ class Explorer():
 
     def __init__(self, planet):
         self.planet = planet
+        self.planet.explorer = self
         self.points = []
         self.cur_point = Point(None)
         self.prev_point = Point(None)
@@ -61,8 +62,18 @@ class Explorer():
             if p.coordinates == coordinates:
                 return p
         return None
-    def add_new_scann(self, coordinates: Tuple[int, int], directions: List[Direction], in_diriction,weight):
+    def unblock(self,start, end):
+        self.get_point(start).directions[self.planet.get_out_direction(start,end)] = False
+        self.get_point(end).directions[self.planet.get_out_direction(end, start)] = False
+    def block(self,start, end):
+        self.get_point(start).directions[self.planet.get_out_direction(start,end)] = True
+        self.get_point(end).directions[self.planet.get_out_direction(end, start)] = True
 
+
+
+    def add_new_scann(self, coordinates: Tuple[int, int], directions: List[Direction], in_diriction,weight):
+        if (not directions.__contains__(in_diriction)):
+            directions.append(in_diriction)
         self.prev_point = copy.deepcopy(self.cur_point)
         if (self.cur_point.coordinates == coordinates):
             cur_point_index = self.points.index(self.get_point(coordinates))
@@ -124,8 +135,9 @@ class Explorer():
             direction = self.planet.shortest_path(self.cur_point.coordinates,p)[0]
             return direction
         return None
-    def set_choosed_direction(self,direction):
-        direction = None
+    def  set_choosed_direction(self,direction):
+        if (direction == None):
+            return
         cur_point_index = self.points.index(self.cur_point)
         self.points[cur_point_index].cur_direction = direction
         self.points[cur_point_index].directions[direction] = True

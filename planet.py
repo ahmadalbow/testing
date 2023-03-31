@@ -4,7 +4,6 @@
 from enum import IntEnum, unique
 from typing import Optional, List, Tuple, Dict
 
-
 @unique
 class Direction(IntEnum):
     """ Directions in shortcut """
@@ -33,6 +32,7 @@ class Planet:
     def __init__(self):
         """ Initializes the data structure """
         self.paths = {}
+        self.explorer = None
 
     def add_path(self, start: Tuple[Tuple[int, int], Direction], target: Tuple[Tuple[int, int], Direction],
                  weight: int):
@@ -82,9 +82,11 @@ class Planet:
     def block_path(self,start:Tuple[int, int],end : Tuple[int, int]):
         self.paths[start][self.get_out_direction(start,end)][2] = -1
         self.paths[end][self.get_in_direction(start, end)][2] = -1
+        self.explorer.block(start, end)
     def un_block_path(self,start:Tuple[int, int],end : Tuple[int, int],weight : Weight):
         self.paths[start][self.get_out_direction(start, end)][2] = weight
         self.paths[end][self.get_in_direction(start, end)][2] = weight
+        self.explorer.unblock(start,end)
     def path_length(self,paths):
         lenght = 0
         if paths == None:
