@@ -49,6 +49,9 @@ class Planet:
             self.paths[target[0]][target[1]] = (start[0], start[1], weight)
         else:
             self.paths[target[0]] = {target[1]: (start[0], start[1], weight)}
+        self.explorer.add_path(start,target)
+        if (weight == -1):
+            self.explorer.block(start[0],target[0])
 
     def get_paths(self) -> Dict[Tuple[int, int], Dict[Direction, Tuple[Tuple[int, int], Direction, Weight]]]:
         return  self.paths
@@ -102,6 +105,8 @@ class Planet:
         distances = {v: float("inf") for v in self.get_vertices()}
         # save the previous vertices in the form (vertices, Direction)
         prev_v = {v: None for v in self.get_vertices()}
+        if (not prev_v.__contains__(start)) : prev_v[start] = None
+        if (not prev_v.__contains__(target)): prev_v[target] = None
         # set the distances of the start point to zero
         distances[start] = 0
 
