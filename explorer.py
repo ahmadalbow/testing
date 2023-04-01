@@ -14,7 +14,6 @@ class Point():
         self.just_scanned = True
     def __eq__(self, other):
         if not isinstance(other, Point):
-            # don't attempt to compare against unrelated types
             return NotImplemented
         return self.coordinates == other.coordinates
 
