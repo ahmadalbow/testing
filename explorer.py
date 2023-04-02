@@ -14,6 +14,7 @@ class Point():
         self.just_scanned = True
     def __eq__(self, other):
         if not isinstance(other, Point):
+            # don't attempt to compare against unrelated types
             return NotImplemented
         return self.coordinates == other.coordinates
 
@@ -129,14 +130,14 @@ class Explorer():
             self.get_point(start_point).directions[start_direction] = True
         else :
             point = Point(start_point)
-            point.directions = {Direction.NORTH:False,Direction.WEST:False,Direction.SOUTH:False,Direction.EAST:False}
+            point.directions = {0:False,90:False,180:False,270:False}
             point.directions[start_direction] = True
             self.points.append(point)
         if (self.points.__contains__(Point(end_point))):
             self.get_point(end_point).directions[end_direction] = True
         else :
             point = Point(end_point)
-            point.directions = {Direction.NORTH:False,Direction.WEST:False,Direction.SOUTH:False,Direction.EAST:False}
+            point.directions = {0:False,90:False,180:False,270:False}
             point.directions[end_direction] = True
             self.points.append(point)
 
