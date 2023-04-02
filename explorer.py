@@ -11,6 +11,7 @@ class Point():
         self.original_perant = None
         self.last_parent = None
         self.cur_direction = None
+        self.are_directions_scaned = True
         self.just_scanned = True
     def __eq__(self, other):
         if not isinstance(other, Point):
@@ -75,8 +76,6 @@ class Explorer():
 
 
     def add_new_scan(self, coordinates: Tuple[int, int], directions: List[Direction], in_diriction,weight):
-        if (not directions.__contains__(in_diriction)):
-            directions.append(in_diriction)
         self.prev_point = copy.deepcopy(self.cur_point)
         if (self.cur_point.coordinates == coordinates):
 
@@ -115,7 +114,10 @@ class Explorer():
             self.cur_point = point
             self.points.append(point)
             self.add_path_to_planet(weight)
-
+    def should_be_scaned(self,coord):
+        if ( self.is_visited(coord)) :
+            return not self.get_point(coord).are_directions_scaned
+        return True
     def _are_all_points_visited(self):
         for point in self.points:
             if (not self.is_explored(point)) :
@@ -132,6 +134,7 @@ class Explorer():
             point = Point(start_point)
             point.directions = {0:False,90:False,180:False,270:False}
             point.directions[start_direction] = True
+            point.are_directions_scaned = False
             self.points.append(point)
         if (self.points.__contains__(Point(end_point))):
             self.get_point(end_point).directions[end_direction] = True
@@ -139,11 +142,14 @@ class Explorer():
             point = Point(end_point)
             point.directions = {0:False,90:False,180:False,270:False}
             point.directions[end_direction] = True
+            point.are_directions_scaned = False
             self.points.append(point)
 
 
 
     def get_next_direction(self):
+        direction = None
+        cur_point_index = self.points.index(self.cur_point)
         for dir in self.cur_point.directions:
             if (not self.cur_point.directions[dir]):
                 try:
@@ -156,10 +162,7 @@ class Explorer():
             un_exp_p = {}
             for p in self.points:
                 if (not self.is_explored(p)):
-                    paths = self.planet.shortest_path(self.cur_point.coordinates,p.coordinates)
-                    if (not self.cur_point.directions.__contains__(paths[0][1])):
-                        continue
-                    path_len = self.planet.path_length(paths)
+                    path_len = self.planet.path_length(self.planet.shortest_path(self.cur_point.coordinates,p.coordinates))
                     un_exp_p[p.coordinates] = path_len
             p = min(un_exp_p, key=lambda a: un_exp_p[a])
             if(self.planet.shortest_path(self.cur_point.coordinates,p) == None ) :
@@ -168,16 +171,11 @@ class Explorer():
             try:
                 return (direction[0],direction[1].value)
             except:
-               return direction
+                return direction
         return None
-    def  set_choosed_direction(self,direction,is_added_from_mother_ship):
+    def  set_choosed_direction(self,direction):
         if (direction == None):
             return
         cur_point_index = self.points.index(self.cur_point)
-        if (is_added_from_mother_ship):
-            directions = self.cur_point.directions.copy()
-            for dir in directions:
-                if(dir != direction):
-                    del self.get_point(self.cur_point.coordinates).directions[dir]
         self.points[cur_point_index].cur_direction = direction
         self.points[cur_point_index].directions[direction] = True
